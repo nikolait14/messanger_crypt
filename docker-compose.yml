@@ -1,0 +1,93 @@
+version: "3.9"
+
+name: messenger
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: messenger-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  gateway:
+    image: golang:1.22-alpine
+    container_name: messenger-gateway
+    working_dir: /app
+    env_file:
+      - .env
+    environment:
+      SERVICE_NAME: gateway
+    command: sh -c "sleep infinity"
+    volumes:
+      - ./:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${GATEWAY_PORT}:8080"
+
+  auth:
+    image: golang:1.22-alpine
+    container_name: messenger-auth
+    working_dir: /app
+    env_file:
+      - .env
+    environment:
+      SERVICE_NAME: auth
+    command: sh -c "sleep infinity"
+    volumes:
+      - ./:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${AUTH_GRPC_PORT}:9001"
+
+  user:
+    image: golang:1.22-alpine
+    container_name: messenger-user
+    working_dir: /app
+    env_file:
+      - .env
+    environment:
+      SERVICE_NAME: user
+    command: sh -c "sleep infinity"
+    volumes:
+      - ./:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${USER_GRPC_PORT}:9002"
+
+  message:
+    image: golang:1.22-alpine
+    container_name: messenger-message
+    working_dir: /app
+    env_file:
+      - .env
+    environment:
+      SERVICE_NAME: message
+    command: sh -c "sleep infinity"
+    volumes:
+      - ./:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${MESSAGE_GRPC_PORT}:9003"
+
+volumes:
+  postgres_data:
