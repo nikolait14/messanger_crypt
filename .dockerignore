@@ -1,0 +1,11 @@
+.git
+.gitignore
+docs
+proto
+shared
+services/auth
+services/user
+services/message
+**/.DS_Store
+**/bin
+**/tmp
