@@ -1,5 +1,10 @@
-go 1.22.0
+go 1.24.0
 
 // Modules will be added here as service go.mod files appear.
 
-use ./services/gateway
+use (
+	./services/auth
+	./services/gateway
+	./services/message
+	./services/user
+)
