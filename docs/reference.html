@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vual — UI Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base:      #0e1117;
+    --bg-surface:   #161b24;
+    --bg-elevated:  #1c2333;
+    --bg-hover:     #222b3a;
+    --bg-active:    #263245;
+    --bg-input:     #1a2030;
+    --accent:       #3b82f6;
+    --accent-dim:   rgba(59,130,246,.15);
+    --accent-hover: #2563eb;
+    --green:        #22c55e;
+    --green-dim:    rgba(34,197,94,.15);
+    --red:          #ef4444;
+    --yellow:       #f59e0b;
+    --text-primary: #e8edf5;
+    --text-secondary: #7a8899;
+    --text-muted:   #4a5568;
+    --border:       rgba(255,255,255,.06);
+    --border-med:   rgba(255,255,255,.10);
+    --shadow:       0 8px 32px rgba(0,0,0,.5);
+    --radius:       14px;
+    --radius-sm:    8px;
+    --radius-msg:   18px;
+    --font:         'Manrope', sans-serif;
+    --mono:         'JetBrains Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 14px; }
+  body {
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--font);
+    min-height: 100vh;
+    padding: 40px 24px 80px;
+  }
+
+  /* ── DOC LAYOUT ── */
+  .doc { max-width: 1100px; margin: 0 auto; }
+
+  .doc-header {
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 56px;
+  }
+  .doc-logo {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: var(--accent); display: grid; place-items: center;
+    font-size: 20px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .doc-title { font-size: 22px; font-weight: 700; color: var(--text-primary); }
+  .doc-sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; font-family: var(--mono); }
+
+  .section { margin-bottom: 64px; }
+  .section-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--text-muted);
+    margin-bottom: 20px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .card-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--text-muted);
+    padding: 12px 16px 8px; border-bottom: 1px solid var(--border);
+  }
+  .card-body { padding: 20px 16px; }
+
+  /* ── PHONE SHELL ── */
+  .phone {
+    width: 280px; height: 560px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-med);
+    border-radius: 36px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    box-shadow: var(--shadow);
+    flex-shrink: 0;
+  }
+  .phone-bar {
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 16px 10px;
+    flex-shrink: 0;
+  }
+  .phone-bar-row { display: flex; align-items: center; justify-content: space-between; }
+  .phone-bar-title { font-size: 16px; font-weight: 700; }
+  .phone-bar-sub { font-size: 10px; color: var(--text-secondary); margin-top: 1px; }
+  .phone-back { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--accent); cursor: pointer; }
+  .phone-scroll { flex: 1; overflow-y: auto; padding: 0; scrollbar-width: none; }
+  .phone-scroll::-webkit-scrollbar { display: none; }
+  .phone-input-bar {
+    background: var(--bg-elevated);
+    border-top: 1px solid var(--border);
+    padding: 10px 12px;
+    display: flex; align-items: center; gap: 10px;
+    flex-shrink: 0;
+  }
+
+  /* ── CHAT LIST ── */
+  .chat-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px; cursor: pointer;
+    transition: background .15s;
+  }
+  .chat-item:hover, .chat-item.active { background: var(--bg-hover); }
+  .chat-item.active { background: var(--bg-active); }
+  .avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    flex-shrink: 0; display: grid; place-items: center;
+    font-size: 16px; font-weight: 700; color: #fff;
+  }
+  .avatar-sm { width: 32px; height: 32px; font-size: 12px; }
+  .chat-meta { flex: 1; min-width: 0; }
+  .chat-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .chat-preview { font-size: 11px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+  .chat-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+  .chat-time { font-size: 10px; color: var(--text-muted); }
+  .badge { background: var(--accent); color: #fff; border-radius: 10px; font-size: 9px; font-weight: 700; padding: 1px 5px; min-width: 16px; text-align: center; }
+
+  /* ── MESSAGES ── */
+  .msg-day { text-align: center; margin: 8px 0; font-size: 10px; color: var(--text-muted); }
+  .msg-wrap { padding: 3px 12px; display: flex; flex-direction: column; }
+  .msg-wrap.out { align-items: flex-end; }
+  .msg-wrap.in { align-items: flex-start; }
+  .bubble {
+    max-width: 76%; padding: 8px 12px;
+    border-radius: var(--radius-msg); font-size: 12px; line-height: 1.45;
+    position: relative;
+  }
+  .bubble.out {
+    background: var(--accent);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+  .bubble.in {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    border-bottom-left-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  .bubble-time { font-size: 9px; opacity: .65; margin-top: 3px; display: flex; align-items: center; gap: 3px; justify-content: flex-end; }
+  .check { width: 12px; height: 8px; }
+
+  /* ── INPUT ── */
+  .fake-input {
+    flex: 1; background: var(--bg-input);
+    border: 1px solid var(--border-med); border-radius: 20px;
+    padding: 7px 14px; font-size: 11px; font-family: var(--font);
+    color: var(--text-secondary); cursor: text;
+  }
+  .icon-btn {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: grid; place-items: center; flex-shrink: 0;
+    cursor: pointer;
+  }
+  .icon-btn.send { background: var(--accent); }
+  .icon-btn.mic { background: var(--bg-hover); }
+
+  /* ── FORMS ── */
+  .form-screen { padding: 28px 20px; display: flex; flex-direction: column; gap: 16px; }
+  .form-logo { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .form-logo-icon {
+    width: 52px; height: 52px; background: var(--accent); border-radius: 16px;
+    display: grid; place-items: center; font-size: 24px; font-weight: 800; color: #fff;
+  }
+  .form-logo-name { font-size: 20px; font-weight: 800; }
+  .form-logo-sub { font-size: 10px; color: var(--text-secondary); }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 10px; font-weight: 600; color: var(--text-secondary); letter-spacing: .04em; text-transform: uppercase; }
+  .field-input {
+    background: var(--bg-input); border: 1px solid var(--border-med);
+    border-radius: var(--radius-sm); padding: 9px 12px;
+    font-size: 12px; font-family: var(--font); color: var(--text-primary);
+  }
+  .field-input.focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+  .field-input.error { border-color: var(--red); }
+  .field-hint { font-size: 9px; color: var(--text-muted); }
+  .field-err { font-size: 9px; color: var(--red); }
+  .btn {
+    padding: 10px; border-radius: var(--radius-sm);
+    font-size: 12px; font-weight: 700; font-family: var(--font);
+    cursor: pointer; border: none; text-align: center;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-ghost { background: transparent; color: var(--accent); border: 1px solid var(--border-med); }
+  .divider { text-align: center; font-size: 10px; color: var(--text-muted); position: relative; }
+  .divider::before, .divider::after {
+    content: ''; position: absolute; top: 50%; width: calc(50% - 24px);
+    height: 1px; background: var(--border);
+  }
+  .divider::before { left: 0; } .divider::after { right: 0; }
+
+  /* ── TOKENS / COLORS ── */
+  .token-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+  .token-item { display: flex; align-items: center; gap: 10px; }
+  .token-swatch { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); flex-shrink: 0; }
+  .token-name { font-size: 10px; font-family: var(--mono); color: var(--text-secondary); }
+  .token-hex { font-size: 9px; color: var(--text-muted); font-family: var(--mono); }
+
+  /* ── API CHIPS ── */
+  .api-list { display: flex; flex-direction: column; gap: 8px; }
+  .api-row {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--bg-elevated); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 9px 12px;
+  }
+  .method {
+    font-size: 9px; font-weight: 700; font-family: var(--mono);
+    padding: 2px 7px; border-radius: 4px; flex-shrink: 0; min-width: 40px; text-align: center;
+  }
+  .method.get  { background: rgba(34,197,94,.15);  color: #22c55e; }
+  .method.post { background: rgba(59,130,246,.15); color: #60a5fa; }
+  .method.ws   { background: rgba(245,158,11,.15); color: #f59e0b; }
+  .api-path { font-size: 10px; font-family: var(--mono); color: var(--text-secondary); flex: 1; }
+  .api-desc { font-size: 10px; color: var(--text-muted); }
+
+  /* ── STATUS DOTS ── */
+  .status-row { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot.online  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .dot.offline { background: var(--text-muted); }
+  .dot.typing  { background: var(--yellow); }
+
+  /* ── SEARCH ── */
+  .search-bar {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg-input); border: 1px solid var(--border);
+    border-radius: 20px; padding: 8px 14px; margin: 8px 12px;
+  }
+  .search-bar span { font-size: 11px; color: var(--text-muted); }
+
+  /* ── TYPOGRAPHY ── */
+  .type-sample { margin-bottom: 14px; }
+  .type-label { font-size: 9px; font-family: var(--mono); color: var(--text-muted); margin-bottom: 3px; }
+
+  /* ── PROFILE ── */
+  .profile-header {
+    background: linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg-surface) 100%);
+    padding: 24px 16px 16px; display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .profile-avatar { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; font-size: 24px; font-weight: 800; color: #fff; }
+  .profile-name { font-size: 15px; font-weight: 700; }
+  .profile-phone { font-size: 11px; color: var(--text-secondary); font-family: var(--mono); }
+  .profile-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 16px; border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .profile-row-icon { width: 20px; color: var(--text-muted); text-align: center; font-size: 14px; }
+  .profile-row-val { color: var(--text-secondary); font-family: var(--mono); font-size: 10px; margin-left: auto; }
+
+  /* ── NOTIFICATION ── */
+  .toast {
+    background: var(--bg-elevated); border: 1px solid var(--border-med);
+    border-radius: var(--radius); padding: 12px 14px;
+    display: flex; align-items: flex-start; gap: 12px;
+    box-shadow: var(--shadow);
+  }
+  .toast-avatar { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; font-size: 14px; font-weight: 700; color: #fff; }
+  .toast-name { font-size: 12px; font-weight: 700; }
+  .toast-text { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+  .toast-time { font-size: 9px; color: var(--text-muted); margin-left: auto; flex-shrink: 0; }
+
+  /* ── WS PILL ── */
+  .ws-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--green-dim); border: 1px solid rgba(34,197,94,.25);
+    border-radius: 20px; padding: 4px 10px; font-size: 9px; font-weight: 700;
+    color: var(--green); font-family: var(--mono);
+  }
+  .ws-pill .dot { width: 6px; height: 6px; }
+
+  /* ── ERROR STATES ── */
+  .err-bubble {
+    background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.2);
+    border-radius: var(--radius-sm); padding: 8px 12px;
+    font-size: 11px; color: #ef4444; font-family: var(--mono);
+  }
+
+  /* phones row */
+  .phones-row { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 800px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    .phones-row { justify-content: center; }
+  }
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <!-- HEADER -->
+  <div class="doc-header">
+    <div class="doc-logo">V</div>
+    <div>
+      <div class="doc-title">Vual — UI Reference</div>
+      <div class="doc-sub">Design system · Screens · API mapping · MVP v1.0</div>
+    </div>
+  </div>
+
+  <!-- SECTION 1: COLORS -->
+  <div class="section">
+    <div class="section-label">01 — Color tokens</div>
+    <div class="card">
+      <div class="card-body">
+        <div class="token-grid">
+          <div class="token-item"><div class="token-swatch" style="background:#0e1117"></div><div><div class="token-name">--bg-base</div><div class="token-hex">#0e1117</div></div></div>
+          <div class="token-item"><div class="token-swatch" style="background:#161b24"></div><div><div class="token-name">--bg-surface</div><div class="token-hex">#161b24</div></div></div>
+          <div class="token-item"><div class="token-swatch" style="background:#1c2333"></div><div><div class="token-name">--bg-elevated</div><div class="token-hex">#1c2333</div></div></div>
+          <div class="token-item"><div class="token-swatch" style="background:#222b3a"></div><div><div class="token-name">--bg-hover</div><div class="token-hex">#222b3a</div></div></div>
+          <div class="token-item"><div class="token-swatch" style="background:#263245"></div><div><div class="token-name">--bg-active</div><div class="token-hex">#263245</div></div></div>
+          <div class="token-item"><div class="token-swatch" style="background:#3b82f6"></div><div><div class="token-name">--accent</div><div class="token-hex">#3b82f6</div></div></div>
+          <div class="token-item"><div class="token-swatch" style="background:#22c55e"></div><div><div class="token-name">--green</div><div class="token-hex">#22c55e</div></div></div>
+          <div class="token-item"><div class="token-swatch" style="background:#ef4444"></div><div><div class="token-name">--red</div><div class="token-hex">#ef4444</div></div></div>
+          <div class="token-item"><div class="token-swatch" style="background:#e8edf5"></div><div><div class="token-name">--text-primary</div><div class="token-hex">#e8edf5</div></div></div>
+          <div class="token-item"><div class="token-swatch" style="background:#7a8899"></div><div><div class="token-name">--text-secondary</div><div class="token-hex">#7a8899</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: SCREENS -->
+  <div class="section">
+    <div class="section-label">02 — Screens</div>
+    <div class="phones-row">
+
+      <!-- SCREEN: Register -->
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:center">
+        <div class="card-label" style="border:none;padding:0;margin-bottom:4px">Register · POST /v1/auth/register</div>
+        <div class="phone">
+          <div class="phone-scroll">
+            <div class="form-screen">
+              <div class="form-logo">
+                <div class="form-logo-icon">V</div>
+                <div class="form-logo-name">Vual</div>
+                <div class="form-logo-sub">Создать аккаунт</div>
+              </div>
+              <div class="field">
+                <label>Имя пользователя</label>
+                <div class="field-input focus" style="color:var(--text-primary)">alex_vual</div>
+                <div class="field-hint">3–32 символа</div>
+              </div>
+              <div class="field">
+                <label>Телефон</label>
+                <div class="field-input" style="color:var(--text-secondary)">+7 999 000 00 00</div>
+              </div>
+              <div class="field">
+                <label>Пароль</label>
+                <div class="field-input error" style="color:var(--text-secondary)">••••••</div>
+                <div class="field-err">Минимум 8 символов</div>
+              </div>
+              <div class="btn btn-primary">Зарегистрироваться</div>
+              <div class="divider">или</div>
+              <div class="btn btn-ghost">Уже есть аккаунт</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN: Chat List -->
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:center">
+        <div class="card-label" style="border:none;padding:0;margin-bottom:4px">Chat list · GET /v1/messages/{userId}</div>
+        <div class="phone">
+          <div class="phone-bar">
+            <div class="phone-bar-row">
+              <div class="phone-bar-title">Vual</div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            </div>
+          </div>
+          <div class="search-bar">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4a5568" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <span>Поиск</span>
+          </div>
+          <div class="phone-scroll">
+            <div class="chat-item active">
+              <div class="avatar" style="background:#3b82f6">M</div>
+              <div class="chat-meta"><div class="chat-name">maria_k</div><div class="chat-preview">Окей, встретимся в 18:00</div></div>
+              <div class="chat-side"><div class="chat-time">14:32</div><div class="badge">2</div></div>
+            </div>
+            <div class="chat-item">
+              <div class="avatar" style="background:#8b5cf6">D</div>
+              <div class="chat-meta"><div class="chat-name">dmitry_v</div><div class="chat-preview">Ты видел новый апдейт?</div></div>
+              <div class="chat-side"><div class="chat-time">13:10</div></div>
+            </div>
+            <div class="chat-item">
+              <div class="avatar" style="background:#0ea5e9">A</div>
+              <div class="chat-meta"><div class="chat-name">anna_design</div><div class="chat-preview">Макеты готовы 🎨</div></div>
+              <div class="chat-side"><div class="chat-time">Вчера</div></div>
+            </div>
+            <div class="chat-item">
+              <div class="avatar" style="background:#10b981">K</div>
+              <div class="chat-meta"><div class="chat-name">kirill_dev</div><div class="chat-preview">push сделан</div></div>
+              <div class="chat-side"><div class="chat-time">Вчера</div></div>
+            </div>
+            <div class="chat-item">
+              <div class="avatar" style="background:#f59e0b">N</div>
+              <div class="chat-meta"><div class="chat-name">natasha_pm</div><div class="chat-preview">Спасибо за демо!</div></div>
+              <div class="chat-side"><div class="chat-time">Пн</div></div>
+            </div>
+            <div class="chat-item">
+              <div class="avatar" style="background:#ef4444">P</div>
+              <div class="chat-meta"><div class="chat-name">pavel_b</div><div class="chat-preview">Завтра митинг в 10</div></div>
+              <div class="chat-side"><div class="chat-time">Пн</div><div class="badge">1</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN: Chat -->
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:center">
+        <div class="card-label" style="border:none;padding:0;margin-bottom:4px">Chat · POST /v1/messages/send · WS /ws</div>
+        <div class="phone">
+          <div class="phone-bar">
+            <div class="phone-bar-row">
+              <div class="phone-back">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+                Назад
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:center">
+                <div class="phone-bar-title" style="font-size:13px">maria_k</div>
+                <div class="phone-bar-sub" style="color:#22c55e">онлайн</div>
+              </div>
+              <div class="avatar avatar-sm" style="background:#3b82f6">M</div>
+            </div>
+          </div>
+          <div class="phone-scroll" style="padding:8px 0;">
+            <div class="msg-day">Сегодня</div>
+            <div class="msg-wrap in">
+              <div class="bubble in">Привет! Как дела?</div>
+              <div class="bubble-time" style="color:var(--text-muted);font-size:9px;margin-top:2px">14:20</div>
+            </div>
+            <div class="msg-wrap out">
+              <div class="bubble out">Отлично, работаем над Vual 🚀
+                <div class="bubble-time">14:21 <svg class="check" viewBox="0 0 16 10" fill="none"><path d="M1 5l4 4 10-8" stroke="rgba(255,255,255,.8)" stroke-width="1.5" stroke-linecap="round"/><path d="M5 5l4 4 6-8" stroke="rgba(255,255,255,.8)" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+              </div>
+            </div>
+            <div class="msg-wrap in">
+              <div class="bubble in">Круто! Покажи когда будет готово</div>
+              <div class="bubble-time" style="color:var(--text-muted);font-size:9px;margin-top:2px">14:22</div>
+            </div>
+            <div class="msg-wrap out">
+              <div class="bubble out">Уже скоро, MVP почти готов
+                <div class="bubble-time">14:28 <svg class="check" viewBox="0 0 16 10" fill="none"><path d="M1 5l4 4 10-8" stroke="rgba(255,255,255,.8)" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+              </div>
+            </div>
+            <div class="msg-wrap in">
+              <div class="bubble in">Окей, встретимся в 18:00</div>
+              <div class="bubble-time" style="color:var(--text-muted);font-size:9px;margin-top:2px">14:32</div>
+            </div>
+            <div style="padding:4px 14px;display:flex;align-items:center;gap:6px">
+              <div class="avatar avatar-sm" style="background:#3b82f6;width:20px;height:20px;font-size:8px">M</div>
+              <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:12px;padding:6px 12px;font-size:10px;color:var(--text-secondary)">
+                <span style="display:inline-flex;gap:3px">
+                  <span style="animation:none;opacity:.4">●</span>
+                  <span style="opacity:.7">●</span>
+                  <span>●</span>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="phone-input-bar">
+            <div class="icon-btn mic">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7a8899" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+            </div>
+            <div class="fake-input">Сообщение...</div>
+            <div class="icon-btn send">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN: Profile -->
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:center">
+        <div class="card-label" style="border:none;padding:0;margin-bottom:4px">Profile · GET /v1/users/me</div>
+        <div class="phone">
+          <div class="phone-bar">
+            <div class="phone-bar-row">
+              <div class="phone-back">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+                Назад
+              </div>
+              <div class="phone-bar-title" style="font-size:13px">Профиль</div>
+              <div style="width:40px"></div>
+            </div>
+          </div>
+          <div class="phone-scroll">
+            <div class="profile-header">
+              <div class="profile-avatar" style="background:#3b82f6">A</div>
+              <div class="profile-name">alex_vual</div>
+              <div class="profile-phone">***0015</div>
+              <div class="ws-pill"><div class="dot online"></div>онлайн</div>
+            </div>
+            <div class="profile-row">
+              <div class="profile-row-icon">@</div>
+              <span>Имя пользователя</span>
+              <div class="profile-row-val">alex_vual</div>
+            </div>
+            <div class="profile-row">
+              <div class="profile-row-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.15 13.1 19.79 19.79 0 0 1 1.08 4.5 2 2 0 0 1 3.05 2.32h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16.92z"/></svg>
+              </div>
+              <span>Телефон</span>
+              <div class="profile-row-val">***0015</div>
+            </div>
+            <div class="profile-row">
+              <div class="profile-row-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              </div>
+              <span>Регистрация</span>
+              <div class="profile-row-val">2024-11-01</div>
+            </div>
+            <div style="height:12px;background:var(--bg-base)"></div>
+            <div class="profile-row" style="cursor:pointer">
+              <div class="profile-row-icon" style="color:#ef4444">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              </div>
+              <span style="color:#ef4444">Выйти</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION 3: WS + STATES -->
+  <div class="section">
+    <div class="section-label">03 — States & components</div>
+    <div class="grid-3">
+
+      <div class="card">
+        <div class="card-label">Online status</div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:12px">
+          <div class="status-row"><div class="dot online"></div> онлайн</div>
+          <div class="status-row"><div class="dot offline"></div> <span style="color:var(--text-secondary)">был(а) сегодня в 12:40</span></div>
+          <div class="status-row"><div class="dot typing"></div> <span style="color:var(--yellow)">печатает...</span></div>
+          <div style="margin-top:8px"><div class="ws-pill"><div class="dot online"></div>WS connected</div></div>
+          <div style="margin-top:4px">
+            <div class="ws-pill" style="background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.2);color:#ef4444">
+              <div class="dot" style="background:#ef4444;width:6px;height:6px"></div>WS disconnected
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Toast · входящее сообщение</div>
+        <div class="card-body">
+          <div class="toast">
+            <div class="toast-avatar" style="background:#8b5cf6">D</div>
+            <div style="flex:1;min-width:0">
+              <div class="toast-name">dmitry_v</div>
+              <div class="toast-text">Ты видел новый апдейт? Уже в мерже...</div>
+            </div>
+            <div class="toast-time">сейчас</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Error states</div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+          <div class="err-bubble">401 · Unauthorized</div>
+          <div class="err-bubble">409 · Username already exists</div>
+          <div class="err-bubble">404 · User not found</div>
+          <div class="err-bubble" style="background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.2);color:#f59e0b">WS ticket expired (60s)</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION 4: API MAP -->
+  <div class="section">
+    <div class="section-label">04 — API endpoints</div>
+    <div class="grid-2">
+
+      <div class="card">
+        <div class="card-label">Auth</div>
+        <div class="card-body">
+          <div class="api-list">
+            <div class="api-row"><span class="method post">POST</span><span class="api-path">/v1/auth/register</span><span class="api-desc">Регистрация</span></div>
+            <div class="api-row"><span class="method post">POST</span><span class="api-path">/v1/auth/login</span><span class="api-desc">Логин → tokens</span></div>
+            <div class="api-row"><span class="method post">POST</span><span class="api-path">/v1/auth/refresh</span><span class="api-desc">Ротация токенов</span></div>
+            <div class="api-row"><span class="method post">POST</span><span class="api-path">/v1/auth/logout</span><span class="api-desc">Отзыв family</span></div>
+            <div class="api-row"><span class="method post">POST</span><span class="api-path">/v1/auth/ws-ticket</span><span class="api-desc">One-time ticket</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Users · Messages · WS</div>
+        <div class="card-body">
+          <div class="api-list">
+            <div class="api-row"><span class="method get">GET</span><span class="api-path">/v1/users/me</span><span class="api-desc">Свой профиль</span></div>
+            <div class="api-row"><span class="method get">GET</span><span class="api-path">/v1/users/{id}</span><span class="api-desc">Профиль по ID</span></div>
+            <div class="api-row"><span class="method get">GET</span><span class="api-path">/v1/users/search</span><span class="api-desc">Поиск по username</span></div>
+            <div class="api-row"><span class="method post">POST</span><span class="api-path">/v1/messages/send</span><span class="api-desc">Отправить</span></div>
+            <div class="api-row"><span class="method get">GET</span><span class="api-path">/v1/messages/{userId}</span><span class="api-desc">История (cursor)</span></div>
+            <div class="api-row"><span class="method ws">WS</span><span class="api-path">/ws?ticket=...</span><span class="api-desc">Real-time</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION 5: AUTH FLOW -->
+  <div class="section">
+    <div class="section-label">05 — Auth & WS flow</div>
+    <div class="card">
+      <div class="card-body" style="display:flex;gap:0;align-items:stretch;flex-wrap:wrap">
+
+        <div style="flex:1;min-width:200px;padding:12px 20px;border-right:1px solid var(--border)">
+          <div style="font-size:10px;font-weight:700;color:var(--accent);margin-bottom:12px;font-family:var(--mono)">REGISTER / LOGIN</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="background:var(--bg-elevated);border-radius:6px;padding:8px 10px;font-size:10px;font-family:var(--mono);color:var(--text-secondary)">POST /v1/auth/register</div>
+            <div style="text-align:center;color:var(--text-muted);font-size:10px">↓</div>
+            <div style="background:var(--bg-elevated);border-radius:6px;padding:8px 10px;font-size:10px;font-family:var(--mono);color:var(--text-secondary)">POST /v1/auth/login</div>
+            <div style="text-align:center;color:var(--text-muted);font-size:10px">↓</div>
+            <div style="background:var(--accent-dim);border:1px solid rgba(59,130,246,.2);border-radius:6px;padding:8px 10px;font-size:10px;font-family:var(--mono);color:#60a5fa">access_token + refresh_token</div>
+          </div>
+        </div>
+
+        <div style="flex:1;min-width:200px;padding:12px 20px;border-right:1px solid var(--border)">
+          <div style="font-size:10px;font-weight:700;color:var(--green);margin-bottom:12px;font-family:var(--mono)">WS CONNECTION</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="background:var(--bg-elevated);border-radius:6px;padding:8px 10px;font-size:10px;font-family:var(--mono);color:var(--text-secondary)">POST /v1/auth/ws-ticket<br><span style="color:var(--text-muted)">Authorization: Bearer ...</span></div>
+            <div style="text-align:center;color:var(--text-muted);font-size:10px">↓ ticket (TTL 60s)</div>
+            <div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:6px;padding:8px 10px;font-size:10px;font-family:var(--mono);color:var(--green)">WS /ws?ticket=&lt;one-time&gt;</div>
+            <div style="text-align:center;color:var(--text-muted);font-size:10px">↓ 101 Upgrade</div>
+            <div class="ws-pill" style="justify-content:center"><div class="dot online"></div>Connected</div>
+          </div>
+        </div>
+
+        <div style="flex:1;min-width:200px;padding:12px 20px">
+          <div style="font-size:10px;font-weight:700;color:var(--yellow);margin-bottom:12px;font-family:var(--mono)">TOKEN REFRESH</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="background:var(--bg-elevated);border-radius:6px;padding:8px 10px;font-size:10px;font-family:var(--mono);color:var(--text-secondary)">access_token истёк<br><span style="color:var(--red)">401 Unauthorized</span></div>
+            <div style="text-align:center;color:var(--text-muted);font-size:10px">↓ авто-ретрай</div>
+            <div style="background:var(--bg-elevated);border-radius:6px;padding:8px 10px;font-size:10px;font-family:var(--mono);color:var(--text-secondary)">POST /v1/auth/refresh<br><span style="color:var(--text-muted)">{refresh_token}</span></div>
+            <div style="text-align:center;color:var(--text-muted);font-size:10px">↓ rotation</div>
+            <div style="background:var(--accent-dim);border:1px solid rgba(59,130,246,.2);border-radius:6px;padding:8px 10px;font-size:10px;font-family:var(--mono);color:#60a5fa">новая пара токенов</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 6: MESSAGE MODEL -->
+  <div class="section">
+    <div class="section-label">06 — Message model & delivery</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-label">Message schema</div>
+        <div class="card-body">
+          <div style="font-family:var(--mono);font-size:10px;line-height:1.8;color:var(--text-secondary)">
+            <span style="color:#60a5fa">id</span>: <span style="color:#f59e0b">uuid</span><br>
+            <span style="color:#60a5fa">sender_id</span>: <span style="color:#f59e0b">uuid</span><br>
+            <span style="color:#60a5fa">receiver_id</span>: <span style="color:#f59e0b">uuid</span><br>
+            <span style="color:#60a5fa">text</span>: <span style="color:#f59e0b">string</span> <span style="color:var(--text-muted)">(max 4096)</span><br>
+            <span style="color:#60a5fa">is_delivered</span>: <span style="color:#f59e0b">boolean</span><br>
+            <span style="color:#60a5fa">created_at</span>: <span style="color:#f59e0b">datetime</span><br>
+            <span style="color:#60a5fa">client_message_id</span>: <span style="color:#f59e0b">uuid?</span> <span style="color:var(--text-muted)">(dedup)</span>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label">Delivery states → UI</div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="bubble out" style="font-size:11px;padding:6px 12px">Отправлено
+              <div class="bubble-time">14:21 <svg class="check" viewBox="0 0 16 10" fill="none"><path d="M1 5l4 4 10-8" stroke="rgba(255,255,255,.6)" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+            </div>
+            <div style="font-size:10px;color:var(--text-muted)">is_delivered: false</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="bubble out" style="font-size:11px;padding:6px 12px">Доставлено
+              <div class="bubble-time">14:21 <svg class="check" viewBox="0 0 16 10" fill="none"><path d="M1 5l4 4 10-8" stroke="rgba(255,255,255,.8)" stroke-width="1.5" stroke-linecap="round"/><path d="M5 5l4 4 6-8" stroke="rgba(255,255,255,.8)" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+            </div>
+            <div style="font-size:10px;color:var(--text-muted)">is_delivered: true</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

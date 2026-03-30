@@ -1,0 +1,382 @@
+openapi: 3.0.3
+info:
+  title: Messenger Gateway API
+  version: 1.0.0
+  description: REST API for mobile client (MVP)
+servers:
+  - url: http://localhost:8080
+
+tags:
+  - name: Health
+  - name: Auth
+  - name: Users
+  - name: Messages
+  - name: WS
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: error
+        code:
+          type: string
+          example: invalid_request
+        message:
+          type: string
+
+    RegisterRequest:
+      type: object
+      required: [username, phone, password]
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 32
+        phone:
+          type: string
+          minLength: 10
+          maxLength: 20
+        password:
+          type: string
+          minLength: 8
+          maxLength: 72
+
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    RefreshRequest:
+      type: object
+      required: [refresh_token]
+      properties:
+        refresh_token:
+          type: string
+
+    LogoutRequest:
+      type: object
+      required: [refresh_token]
+      properties:
+        refresh_token:
+          type: string
+
+    SendMessageRequest:
+      type: object
+      required: [to_username, text]
+      properties:
+        to_username:
+          type: string
+          minLength: 3
+          maxLength: 32
+        text:
+          type: string
+          minLength: 1
+          maxLength: 4096
+        client_message_id:
+          type: string
+          format: uuid
+
+    Tokens:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        token_type:
+          type: string
+          example: Bearer
+        expires_in:
+          type: integer
+          format: int64
+          example: 3600
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        phone:
+          type: string
+          example: "***0015"
+        created_at:
+          type: string
+          format: date-time
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sender_id:
+          type: string
+          format: uuid
+        receiver_id:
+          type: string
+          format: uuid
+        text:
+          type: string
+        is_delivered:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+paths:
+  /v1/healthz:
+    get:
+      tags: [Health]
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+
+  /v1/readyz:
+    get:
+      tags: [Health]
+      summary: Readiness check
+      responses:
+        "200":
+          description: Ready
+
+  /v1/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: Registered
+        "400":
+          description: Validation error
+        "409":
+          description: Username or phone already exists
+
+  /v1/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Token pair
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  tokens:
+                    $ref: "#/components/schemas/Tokens"
+        "401":
+          description: Invalid credentials
+
+  /v1/auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh tokens (rotation)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+      responses:
+        "200":
+          description: New token pair
+        "401":
+          description: Invalid, expired, or revoked refresh token
+
+  /v1/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout and revoke token family
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LogoutRequest"
+      responses:
+        "200":
+          description: Logged out
+
+  /v1/auth/ws-ticket:
+    post:
+      tags: [Auth]
+      summary: Issue one-time WS ticket
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Ticket issued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  ticket:
+                    type: string
+                  ttl:
+                    type: integer
+                    example: 60
+        "401":
+          description: Unauthorized
+
+  /v1/users/me:
+    get:
+      tags: [Users]
+      summary: Current user profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user profile
+        "401":
+          description: Unauthorized
+
+  /v1/users/{id}:
+    get:
+      tags: [Users]
+      summary: Get user by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: User profile
+        "404":
+          description: User not found
+
+  /v1/users/search:
+    get:
+      tags: [Users]
+      summary: Search users by username prefix
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: username
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User list
+        "400":
+          description: Invalid query
+
+  /v1/messages/send:
+    post:
+      tags: [Messages]
+      summary: Send message
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendMessageRequest"
+      responses:
+        "201":
+          description: Message created
+        "404":
+          description: Receiver not found
+
+  /v1/messages/{userId}:
+    get:
+      tags: [Messages]
+      summary: Get history with peer user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: cursor
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Message history page
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  messages:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Message"
+                  next_cursor:
+                    type: string
+                    format: uuid
+
+  /ws:
+    get:
+      tags: [WS]
+      summary: WebSocket endpoint
+      description: Connect using one-time ticket `ws://host/ws?ticket=...`.
+      parameters:
+        - name: ticket
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "101":
+          description: WebSocket upgrade
+        "401":
+          description: Missing, invalid, or expired ticket

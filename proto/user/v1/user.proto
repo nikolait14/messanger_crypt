@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package user.v1;
+option go_package = "user/v1;userv1";
+
+service UserService {
+  rpc GetUser(GetUserRequest) returns (UserResponse);
+  rpc SearchUsers(SearchUsersRequest) returns (SearchUsersResponse);
+}
+
+message GetUserRequest {
+  string user_id = 1;
+}
+
+message SearchUsersRequest {
+  string username = 1;
+  int32 limit = 2;
+}
+
+message UserResponse {
+  string id = 1;
+  string username = 2;
+  string phone = 3;
+  string created_at = 4;
+}
+
+message SearchUsersResponse {
+  repeated UserResponse users = 1;
+}

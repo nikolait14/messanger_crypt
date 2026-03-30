@@ -14,6 +14,9 @@ func RegisterRoutes(r *gin.Engine) {
 	}
 
 	registerAuthRoutes(v1)
+	registerUserRoutes(v1)
+	registerMessageRoutes(v1)
+	registerWSRoutes(r, v1)
 }
 
 func healthz(c *gin.Context) {
