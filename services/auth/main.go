@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"time"
 
@@ -329,6 +330,20 @@ CREATE INDEX IF NOT EXISTS idx_refresh_tokens_family ON refresh_tokens(family_id
 	return err
 }
 
+func startHTTPServer(port string) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/v1/healthz", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"status":"ok"}`))
+	})
+
+	log.Printf("HTTP healthcheck started on :%s", port)
+	if err := http.ListenAndServe(":"+port, mux); err != nil {
+		log.Fatal(err)
+	}
+}
+
 func main() {
 	cfg, err := loadConfig()
 	if err != nil {
@@ -346,6 +361,8 @@ func main() {
 	if err := ensureSchema(startCtx, db); err != nil {
 		log.Fatal(err)
 	}
+
+	go startHTTPServer("8080")
 
 	addr := ":" + cfg.GRPCPort
 
