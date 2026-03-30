@@ -12,6 +12,8 @@ func RegisterRoutes(r *gin.Engine) {
 		v1.GET("/healthz", healthz)
 		v1.GET("/readyz", readyz)
 	}
+
+	registerAuthRoutes(v1)
 }
 
 func healthz(c *gin.Context) {
