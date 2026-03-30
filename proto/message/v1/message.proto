@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package message.v1;
+option go_package = "message/v1;messagev1";
+
+service MessageService {
+  rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
+  rpc GetHistory(GetHistoryRequest) returns (GetHistoryResponse);
+}
+
+message SendMessageRequest {
+  string sender_id = 1;
+  string to_username = 2;
+  string text = 3;
+  string client_message_id = 4;
+}
+
+message SendMessageResponse {
+  string message_id = 1;
+  string created_at = 2;
+}
+
+message GetHistoryRequest {
+  string user_id = 1;
+  string peer_user_id = 2;
+  int32 limit = 3;
+  string cursor = 4;
+}
+
+message MessageItem {
+  string id = 1;
+  string sender_id = 2;
+  string receiver_id = 3;
+  string text = 4;
+  bool is_delivered = 5;
+  string created_at = 6;
+}
+
+message GetHistoryResponse {
+  repeated MessageItem messages = 1;
+  string next_cursor = 2;
+}

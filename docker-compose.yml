@@ -1,5 +1,3 @@
-version: "3.9"
-
 name: messenger
 
 services:
@@ -8,86 +6,106 @@ services:
     container_name: messenger-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-messenger}
+      POSTGRES_USER: ${POSTGRES_USER:-messenger}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-messenger}
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-messenger} -d ${POSTGRES_DB:-messenger}",
+        ]
       interval: 5s
       timeout: 5s
       retries: 10
 
   gateway:
-    image: golang:1.22-alpine
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
     container_name: messenger-gateway
-    working_dir: /app
-    env_file:
-      - .env
+    restart: unless-stopped
     environment:
-      SERVICE_NAME: gateway
-    command: sh -c "sleep infinity"
-    volumes:
-      - ./:/app
+      APP_ENV: ${APP_ENV:-local}
+      GATEWAY_PORT: "8080"
+      AUTH_GRPC_ADDR: auth:9001
+      USER_GRPC_ADDR: user:9002
+      MESSAGE_GRPC_ADDR: message:9003
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-change_me_access_secret}
     depends_on:
       postgres:
         condition: service_healthy
+      auth:
+        condition: service_started
+      user:
+        condition: service_started
+      message:
+        condition: service_started
     ports:
-      - "${GATEWAY_PORT}:8080"
+      - "${GATEWAY_PORT:-8080}:8080"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://127.0.0.1:8080/v1/healthz >/dev/null || exit 1",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   auth:
-    image: golang:1.22-alpine
+    build:
+      context: .
+      dockerfile: services/auth/Dockerfile
     container_name: messenger-auth
-    working_dir: /app
-    env_file:
-      - .env
+    restart: unless-stopped
     environment:
-      SERVICE_NAME: auth
-    command: sh -c "sleep infinity"
-    volumes:
-      - ./:/app
+      AUTH_GRPC_PORT: "9001"
+      DATABASE_URL: postgres://messenger:messenger@postgres:5432/messenger?sslmode=disable
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-change_me_access_secret}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change_me_refresh_secret}
+      ACCESS_TOKEN_TTL: ${ACCESS_TOKEN_TTL:-60m}
+      REFRESH_TOKEN_TTL: ${REFRESH_TOKEN_TTL:-720h}
     depends_on:
       postgres:
         condition: service_healthy
     ports:
-      - "${AUTH_GRPC_PORT}:9001"
+      - "${AUTH_GRPC_PORT:-9001}:9001"
 
   user:
-    image: golang:1.22-alpine
+    build:
+      context: .
+      dockerfile: services/user/Dockerfile
     container_name: messenger-user
-    working_dir: /app
-    env_file:
-      - .env
+    restart: unless-stopped
     environment:
-      SERVICE_NAME: user
-    command: sh -c "sleep infinity"
-    volumes:
-      - ./:/app
+      USER_GRPC_PORT: "9002"
+      DATABASE_URL: postgres://messenger:messenger@postgres:5432/messenger?sslmode=disable
     depends_on:
       postgres:
         condition: service_healthy
     ports:
-      - "${USER_GRPC_PORT}:9002"
+      - "${USER_GRPC_PORT:-9002}:9002"
 
   message:
-    image: golang:1.22-alpine
+    build:
+      context: .
+      dockerfile: services/message/Dockerfile
     container_name: messenger-message
-    working_dir: /app
-    env_file:
-      - .env
+    restart: unless-stopped
     environment:
-      SERVICE_NAME: message
-    command: sh -c "sleep infinity"
-    volumes:
-      - ./:/app
+      MESSAGE_GRPC_PORT: "9003"
+      DATABASE_URL: postgres://messenger:messenger@postgres:5432/messenger?sslmode=disable
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef}
     depends_on:
       postgres:
         condition: service_healthy
     ports:
-      - "${MESSAGE_GRPC_PORT}:9003"
+      - "${MESSAGE_GRPC_PORT:-9003}:9003"
 
 volumes:
   postgres_data:

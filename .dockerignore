@@ -1,0 +1,8 @@
+.git
+.gitignore
+docs
+proto
+shared
+**/.DS_Store
+**/bin
+**/tmp

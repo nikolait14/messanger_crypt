@@ -1,3 +1,5 @@
 go 1.22.0
 
 // Modules will be added here as service go.mod files appear.
+
+use ./services/gateway
