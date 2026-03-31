@@ -349,6 +349,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	httpPort := getenv("PORT", "8080")
 
 	db, err := sqlx.Connect("postgres", cfg.DatabaseURL)
 	if err != nil {
@@ -362,7 +363,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	go startHTTPServer("8080")
+	go startHTTPServer(httpPort)
 
 	addr := ":" + cfg.GRPCPort
 

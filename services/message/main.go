@@ -10,6 +10,7 @@ import (
 	"errors"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"time"
 
@@ -190,6 +191,20 @@ func getenv(key, fallback string) string {
 	return fallback
 }
 
+func startHTTPServer(port string) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/v1/healthz", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"status":"ok"}`))
+	})
+
+	log.Printf("message HTTP healthcheck started on :%s", port)
+	if err := http.ListenAndServe(":"+port, mux); err != nil {
+		log.Fatal(err)
+	}
+}
+
 func ensureMessageSchema(ctx context.Context, db *sqlx.DB) error {
 	const schema = `
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
@@ -213,6 +228,7 @@ CREATE INDEX IF NOT EXISTS idx_messages_pair_time
 
 func main() {
 	port := getenv("MESSAGE_GRPC_PORT", "9003")
+	httpPort := getenv("PORT", "8080")
 	dsn := getenv("DATABASE_URL", "postgres://messenger:messenger@postgres:5432/messenger?sslmode=disable")
 	key := getenv("ENCRYPTION_KEY", "0123456789abcdef0123456789abcdef")
 	keyID := int16(1)
@@ -246,6 +262,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	go startHTTPServer(httpPort)
 
 	srv := grpc.NewServer()
 	messagev1.RegisterMessageServiceServer(srv, &messageServer{

@@ -12,8 +12,13 @@ type Config struct {
 }
 
 func Load() Config {
+	port := os.Getenv("GATEWAY_PORT")
+	if port == "" {
+		port = getenv("PORT", "8080")
+	}
+
 	return Config{
-		Port:         getenv("GATEWAY_PORT", "8080"),
+		Port:         port,
 		Env:          getenv("APP_ENV", "local"),
 		AuthGRPCAddr: getenv("AUTH_GRPC_ADDR", "auth:9001"),
 		UserGRPCAddr: getenv("USER_GRPC_ADDR", "user:9002"),
