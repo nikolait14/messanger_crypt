@@ -11,6 +11,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	authv1 "messenger/services/auth/internal/pb/proto/auth/v1"
@@ -27,8 +28,27 @@ import (
 
 type authServer struct {
 	authv1.UnimplementedAuthServiceServer
+	mu  sync.RWMutex
 	db  *sqlx.DB
 	cfg config
+}
+
+// setDB stores the database handle once it becomes available.
+func (s *authServer) setDB(db *sqlx.DB) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.db = db
+}
+
+// getDB returns the database handle, or an UNAVAILABLE gRPC error if the
+// database connection has not been established yet.
+func (s *authServer) getDB() (*sqlx.DB, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if s.db == nil {
+		return nil, status.Error(codes.Unavailable, "database not ready, please retry")
+	}
+	return s.db, nil
 }
 
 type config struct {
@@ -60,6 +80,11 @@ func (s *authServer) Register(_ context.Context, req *authv1.RegisterRequest) (*
 		return nil, status.Error(codes.InvalidArgument, "username, phone and password are required")
 	}
 
+	db, err := s.getDB()
+	if err != nil {
+		return nil, err
+	}
+
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.GetPassword()), s.cfg.BcryptCost)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to hash password")
@@ -75,7 +100,7 @@ RETURNING id, username, phone;
 		Username string    `db:"username"`
 		Phone    string    `db:"phone"`
 	}
-	err = s.db.Get(&created, q, req.GetUsername(), req.GetPhone(), string(hash))
+	err = db.Get(&created, q, req.GetUsername(), req.GetPhone(), string(hash))
 	if err != nil {
 		var pqErr *pq.Error
 		if errors.As(err, &pqErr) && pqErr.Code == "23505" {
@@ -96,8 +121,13 @@ func (s *authServer) Login(_ context.Context, req *authv1.LoginRequest) (*authv1
 		return nil, status.Error(codes.InvalidArgument, "username and password are required")
 	}
 
+	db, err := s.getDB()
+	if err != nil {
+		return nil, err
+	}
+
 	var user userRow
-	err := s.db.Get(&user, "SELECT id, username, phone, password_hash FROM users WHERE username = $1", req.GetUsername())
+	err = db.Get(&user, "SELECT id, username, phone, password_hash FROM users WHERE username = $1", req.GetUsername())
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, status.Error(codes.Unauthenticated, "invalid credentials")
@@ -114,7 +144,7 @@ func (s *authServer) Login(_ context.Context, req *authv1.LoginRequest) (*authv1
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to issue tokens")
 	}
-	if err := s.storeRefreshToken(user.ID.String(), familyID, refresh); err != nil {
+	if err := s.storeRefreshToken(db, user.ID.String(), familyID, refresh); err != nil {
 		return nil, status.Error(codes.Internal, "failed to persist refresh token")
 	}
 
@@ -130,6 +160,11 @@ func (s *authServer) Refresh(_ context.Context, req *authv1.RefreshRequest) (*au
 		return nil, status.Error(codes.InvalidArgument, "refresh_token is required")
 	}
 
+	db, err := s.getDB()
+	if err != nil {
+		return nil, err
+	}
+
 	claims, err := s.parseRefreshToken(req.GetRefreshToken())
 	if err != nil {
 		return nil, status.Error(codes.Unauthenticated, "invalid refresh token")
@@ -139,7 +174,7 @@ func (s *authServer) Refresh(_ context.Context, req *authv1.RefreshRequest) (*au
 		UserID   uuid.UUID `db:"user_id"`
 		FamilyID uuid.UUID `db:"family_id"`
 	}
-	err = s.db.Get(
+	err = db.Get(
 		&current,
 		`SELECT user_id, family_id FROM refresh_tokens
 		 WHERE token_hash = $1 AND revoked_at IS NULL AND expires_at > NOW()`,
@@ -156,7 +191,7 @@ func (s *authServer) Refresh(_ context.Context, req *authv1.RefreshRequest) (*au
 		return nil, status.Error(codes.Unauthenticated, "refresh token does not match session")
 	}
 
-	if err := s.revokeFamily(claims.FamilyID); err != nil {
+	if err := s.revokeFamily(db, claims.FamilyID); err != nil {
 		return nil, status.Error(codes.Internal, "failed to rotate refresh token")
 	}
 
@@ -164,7 +199,7 @@ func (s *authServer) Refresh(_ context.Context, req *authv1.RefreshRequest) (*au
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to issue rotated tokens")
 	}
-	if err := s.storeRefreshToken(claims.UserID, claims.FamilyID, refresh); err != nil {
+	if err := s.storeRefreshToken(db, claims.UserID, claims.FamilyID, refresh); err != nil {
 		return nil, status.Error(codes.Internal, "failed to store rotated token")
 	}
 
@@ -180,11 +215,16 @@ func (s *authServer) Logout(_ context.Context, req *authv1.LogoutRequest) (*auth
 		return nil, status.Error(codes.InvalidArgument, "refresh_token is required")
 	}
 
+	db, err := s.getDB()
+	if err != nil {
+		return nil, err
+	}
+
 	claims, err := s.parseRefreshToken(req.GetRefreshToken())
 	if err != nil {
 		return nil, status.Error(codes.Unauthenticated, "invalid refresh token")
 	}
-	if err := s.revokeFamily(claims.FamilyID); err != nil {
+	if err := s.revokeFamily(db, claims.FamilyID); err != nil {
 		return nil, status.Error(codes.Internal, "failed to revoke session")
 	}
 
@@ -269,7 +309,7 @@ func (s *authServer) parseRefreshToken(token string) (*tokenClaims, error) {
 	return claims, nil
 }
 
-func (s *authServer) storeRefreshToken(userID, familyID, rawToken string) error {
+func (s *authServer) storeRefreshToken(db *sqlx.DB, userID, familyID, rawToken string) error {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
 		return err
@@ -278,7 +318,7 @@ func (s *authServer) storeRefreshToken(userID, familyID, rawToken string) error 
 	if err != nil {
 		return err
 	}
-	_, err = s.db.Exec(
+	_, err = db.Exec(
 		`INSERT INTO refresh_tokens (user_id, family_id, token_hash, expires_at)
 		 VALUES ($1, $2, $3, NOW() + $4::interval)`,
 		uid,
@@ -289,12 +329,12 @@ func (s *authServer) storeRefreshToken(userID, familyID, rawToken string) error 
 	return err
 }
 
-func (s *authServer) revokeFamily(familyID string) error {
+func (s *authServer) revokeFamily(db *sqlx.DB, familyID string) error {
 	fid, err := uuid.Parse(familyID)
 	if err != nil {
 		return err
 	}
-	_, err = s.db.Exec(`UPDATE refresh_tokens SET revoked_at = NOW() WHERE family_id = $1 AND revoked_at IS NULL`, fid)
+	_, err = db.Exec(`UPDATE refresh_tokens SET revoked_at = NOW() WHERE family_id = $1 AND revoked_at IS NULL`, fid)
 	return err
 }
 
@@ -351,18 +391,8 @@ func main() {
 	}
 	httpPort := getenv("PORT", "8080")
 
-	db, err := sqlx.Connect("postgres", cfg.DatabaseURL)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-
-	startCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err := ensureSchema(startCtx, db); err != nil {
-		log.Fatal(err)
-	}
-
+	// Start the HTTP healthcheck server immediately so Railway's healthcheck
+	// can reach /v1/healthz before the database connection is established.
 	go startHTTPServer(httpPort)
 
 	addr := ":" + cfg.GRPCPort
@@ -372,8 +402,39 @@ func main() {
 		log.Fatal(err)
 	}
 
+	srv := &authServer{cfg: cfg}
+
+	// Connect to the database and initialise the schema in the background.
+	// The gRPC server starts right away; handlers will receive an UNAVAILABLE
+	// error until the database is ready.
+	go func() {
+		const retryInterval = 5 * time.Second
+		for {
+			db, err := sqlx.Connect("postgres", cfg.DatabaseURL)
+			if err != nil {
+				log.Printf("db connect failed, retrying in %s: %v", retryInterval, err)
+				time.Sleep(retryInterval)
+				continue
+			}
+
+			schemaCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			if err := ensureSchema(schemaCtx, db); err != nil {
+				cancel()
+				db.Close()
+				log.Printf("schema init failed, retrying in %s: %v", retryInterval, err)
+				time.Sleep(retryInterval)
+				continue
+			}
+			cancel()
+
+			srv.setDB(db)
+			log.Printf("database ready")
+			return
+		}
+	}()
+
 	grpcServer := grpc.NewServer()
-	authv1.RegisterAuthServiceServer(grpcServer, &authServer{db: db, cfg: cfg})
+	authv1.RegisterAuthServiceServer(grpcServer, srv)
 
 	log.Printf("auth gRPC started on %s", addr)
 	if err := grpcServer.Serve(lis); err != nil {
