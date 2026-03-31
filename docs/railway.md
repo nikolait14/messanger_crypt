@@ -2,6 +2,28 @@
 
 Use one GitHub repository and one Railway service per backend component.
 
+## Monolith Mode (Recommended For Simpler Deploy)
+
+You can deploy only one service (`gateway`) as a monolith.
+
+- Config as Code path: `/services/gateway/railway.monolith.toml`
+- Dockerfile: `services/gateway/Dockerfile.monolith`
+
+Required variables for monolith:
+
+- `PORT=8080`
+- `DATABASE_URL=<reference from Railway Postgres>`
+- `JWT_ACCESS_SECRET=<secret>`
+- `JWT_REFRESH_SECRET=<secret>`
+- `ENCRYPTION_KEY=<32 chars>`
+- `ACCESS_TOKEN_TTL=60m`
+- `REFRESH_TOKEN_TTL=720h`
+- `AUTH_GRPC_PORT=9001` (internal in-process)
+- `USER_GRPC_PORT=9002` (internal in-process)
+- `MESSAGE_GRPC_PORT=9003` (internal in-process)
+
+In this mode, no separate `auth/user/message` Railway services are needed.
+
 ## Config Paths
 
 When creating each Railway service, set **Config as Code path**:
